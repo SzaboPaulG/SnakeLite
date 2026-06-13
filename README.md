@@ -19,7 +19,7 @@ WASD or arrow keys to control the snake, R to restart the game once the current 
 
 ## Gameplay
 
-![gameplay](gameplay.gif)
+![gameplay](Gameplay.gif)
 
 
 ## Build & Run
