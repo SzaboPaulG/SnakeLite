@@ -12,6 +12,10 @@ public static class Program
         UInt64 framesRenderedCounter = 0;
         var timer = new Stopwatch();
 
+        var game = new Game();
+
+        timer.Start();
+
         ReadOnlySpan<byte> keyboardState;
         unsafe
         {
@@ -67,10 +71,7 @@ public static class Program
             throw new Exception("Failed to create renderer.");
         }
 
-        var startX = 100;
-        var startY = 100;
-        var endX = 200;
-        var endY = 200;
+
 
         bool quit = false;
         while (!quit)
@@ -144,55 +145,6 @@ public static class Program
                         break;
                     }
 
-                    case (uint)EventType.Fingermotion:
-                    {
-                        break;
-                    }
-
-                    case (uint)EventType.Mousemotion:
-                    {
-                        if (keyboardState[(byte)KeyCode.LShift] > 0)
-                        {
-                            endX = ev.Motion.X;
-                            endY = ev.Motion.Y;
-                        }
-                        else
-                        {
-                            startX = ev.Motion.X;
-                            startY = ev.Motion.Y;
-                        }
-
-                        break;
-                    }
-
-                    case (uint)EventType.Fingerdown:
-                    {
-                        mouseButtonStates[(byte)MouseButton.Primary] = 1;
-                        break;
-                    }
-                    case (uint)EventType.Mousebuttondown:
-                    {
-                        mouseButtonStates[ev.Button.Button] = 1;
-                        break;
-                    }
-
-                    case (uint)EventType.Fingerup:
-                    {
-                        mouseButtonStates[(byte)MouseButton.Primary] = 0;
-                        break;
-                    }
-
-                    case (uint)EventType.Mousebuttonup:
-                    {
-                        mouseButtonStates[ev.Button.Button] = 0;
-                        break;
-                    }
-
-                    case (uint)EventType.Mousewheel:
-                    {
-                        break;
-                    }
-
                     case (uint)EventType.Keyup:
                     {
                         break;
@@ -200,8 +152,8 @@ public static class Program
 
                     case (uint)EventType.Keydown:
                     {
-                        Console.WriteLine($"Key down: {(KeyCode)ev.Key.Keysym.Scancode}");
-                        break;
+                            game.HandleKey((KeyCode)ev.Key.Keysym.Scancode);
+                            break;
                     }
                 }
             }
@@ -209,25 +161,26 @@ public static class Program
             var elapsed = timer.Elapsed;
             timer.Restart();
 
+            game.Update((float)elapsed.TotalSeconds);
+
             // game.render(renderer, RenderEvent{ elapsed, framesRenderedCounter++ });
             unsafe
             {
-                var r = (Renderer *)renderer;
-
-                sdl.SetRenderDrawColor(r, 255, 255, 255, 255);
-                sdl.RenderClear(r);
-
-                sdl.SetRenderDrawColor(r, 255, 0, 0, 255);
-                sdl.RenderDrawLine(r, startX, startY, endX, endY);
-
-                sdl.RenderPresent(r);
+                sdl.SetWindowTitle(
+                    (Window*)window,
+                    $"Snake | Score: {game.Score} | High Score: {game.HighScore}"
+                );
             }
+
+            game.Render(sdl, renderer);
 
             ++framesRenderedCounter;
         }
 
         unsafe
         {
+
+            sdl.DestroyRenderer((Renderer*)renderer);
             sdl.DestroyWindow((Window*)window);
         }
 
